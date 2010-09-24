@@ -6,8 +6,10 @@ var fs = require('fs');
 var Mu = require('./lib/mu');
 
 Mu.templateRoot = './templates';
-var host = '127.0.0.1';
-var port = '8124';
+var webRoot = './web';
+
+var GShost = '127.0.0.1';
+var GSport = '8124';
 
 http.createServer(function (request, response) {
     switch(url.parse(request.url).pathname) {
@@ -29,7 +31,7 @@ http.createServer(function (request, response) {
                    requestBuffer += chunk; }
                );
                output.addListener('end', function () { 
-                   var socket = net.createConnection(port, host);
+                   var socket = net.createConnection(GSport, GShost);
                    socket.setEncoding('utf8');
                    socket.addListener('connect', function() {
                        socket.write(requestBuffer);
@@ -62,7 +64,7 @@ http.createServer(function (request, response) {
             var contentType = (/\.(.*?)$/.exec(file)||[])[1] == 'html' ? 'text/html' : null;
             console.log("Attempting to fetch: " + file);
             
-            fs.readFile('./web/' + file, function (err, data) {
+            fs.readFile(webRoot + file, function (err, data) {
                 if (err) {
                     response.writeHead(404, {
                         'Content-Type': 'text/plain'
