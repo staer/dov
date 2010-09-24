@@ -1,22 +1,25 @@
 var http = require('http');
 var url = require('url');
 var net = require('net');
-var querystring = require('querystring');
+var qs = require('querystring');
 var fs = require('fs');
 var Mu = require('./lib/mu');
 
 Mu.templateRoot = './templates';
-var webRoot = './web';
 
-var GShost = '127.0.0.1';
-var GSport = '8124';
+var SETTINGS = {
+    'port': '8124',                 // Port to run the HTTP Server on
+    'webroot': './web/',            // Location of the static files to serve over HTTP
+    'GS_host': '127.0.0.1',         // Game server host
+    'GS_port': '8124'               // Game server port
+}
 
 http.createServer(function (request, response) {
     switch(url.parse(request.url).pathname) {
         case '/login':
             console.log("Login request received");
             
-            var myData = querystring.parse(url.parse(request.url).query);
+            var myData = qs.parse(url.parse(request.url).query);
             var ctx = {
                 "username": myData.username,
                 "password": myData.password
@@ -31,7 +34,7 @@ http.createServer(function (request, response) {
                    requestBuffer += chunk; }
                );
                output.addListener('end', function () { 
-                   var socket = net.createConnection(GSport, GShost);
+                   var socket = net.createConnection(SETTINGS.GS_port, SETTINGS.GS_host);
                    socket.setEncoding('utf8');
                    socket.addListener('connect', function() {
                        socket.write(requestBuffer);
@@ -48,7 +51,7 @@ http.createServer(function (request, response) {
 
                            var strResponse = JSON.stringify(jsonResponse);
                            response.writeHead(200, {
-                               'Content-Type': 'text/plain',
+                               'Content-Type': 'application/json',
                                'Content-Length': strResponse.length
                            }, encoding='utf8');
                            response.end(strResponse, encoding='utf8');
@@ -62,9 +65,8 @@ http.createServer(function (request, response) {
         default: 
             var file = request.url.replace(/\.\.\//g,'').substring(1) || 'index.html';
             var contentType = (/\.(.*?)$/.exec(file)||[])[1] == 'html' ? 'text/html' : null;
-            console.log("Attempting to fetch: " + file);
-            
-            fs.readFile(webRoot + file, function (err, data) {
+            console.log("Attempting to fetch file: " + file);
+            fs.readFile(SETTINGS.webroot + file, function (err, data) {
                 if (err) {
                     response.writeHead(404, {
                         'Content-Type': 'text/plain'
@@ -80,6 +82,6 @@ http.createServer(function (request, response) {
             });
             break;
     }
-}).listen(8124);
+}).listen(SETTINGS.port);
 
-console.log('Server running at http://127.0.0.1:8124/');
+console.log('Server running at http://127.0.0.1:' + SETTINGS.port);
