@@ -43,9 +43,9 @@ var DOV_API = {
         }
         DoVGameServer.query(DoVGameServer.commands.LOGOUT, ctx, response, function(data) {
             var jsonResponse = {
-                'status': 'error',
-                'message': 'TODO: Log Out has not been implemented fully!'
-            }
+                'status': 'success',
+                'message': 'Logged out successfully!'
+            };
             return jsonResponse;
         });
     },
@@ -59,10 +59,9 @@ var DOV_API = {
             "email": urlData.email
         }
         DoVGameServer.query(DoVGameServer.commands.CREATE_ACCOUNT, ctx, response, function(data){
-           var jsonResponse = {
-               'status': 'error',
-               'message': 'TODO: CreateAccount has not been implemented fully!'
-           } 
+           var jsonResponse = {};
+           jsonResponse.status = "success";
+           jsonResponse.sessionID = data.sessionID;
            return jsonResponse;
         });
     },
@@ -150,14 +149,13 @@ var DoVGameServer = {
                    socket.addListener('data', function(data) {
                        serverResponse += data;
                        
-                       // TODO: For JSON we need a way to detect end of stream (newline at the moment)...
                        if(serverResponse.toLowerCase().indexOf("\n")) {
-                           //serverResponse = serverResponse.substring(0, serverResponse.length-1);
+                           serverResponse = serverResponse.replace("\n", "");
                            socket.end();
                            
                            if(SETTINGS.debug) {
                                console.log("Response: ");
-                               console.log(serverResponse);
+                               console.log("*" + serverResponse + "*");
                            }
                            // Process the XML, convert to a JSON object and send back
                            var serverObj = JSON.parse(serverResponse);

@@ -93,12 +93,21 @@
 			}
 		
 			$(document).ready(function(){
+				$('#command').bind('keypress', function(event) {
+					if (event.keyCode == '13') {
+				    	event.preventDefault();
+						$('#btnSubmit').click();
+				   }
+				});
+				
+				
 				$('#btnSubmit').bind('click', function() {
 					// yay for super basic parsing!
+					displayText("$> " + $('#command')[0].value);
 					var command = $('#command')[0].value;
 					var commandList = command.split(' ');
 					
-					if(!window.localStorage.sessionID) {
+					if(!window.sessionStorage.sessionID) {
 						if(commandList[0]!=="help" && commandList[0]!=="login" && commandList[0]!=="clear" && commandList[0]!=="create") {
 							displayText("You must be logged in before you can issue most commands. See 'help' for more information");
 							$("#command")[0].value = "";
@@ -126,8 +135,8 @@
 							
 							break;
 						case "session":
-							if(window.localStorage.sessionID) {
-								displayText("SessionID: " + window.localStorage.sessionID);
+							if(window.sessionStorage.sessionID) {
+								displayText("SessionID: " + window.sessionStorage.sessionID);
 							} else {
 								displayText("You are not logged in.");
 							}
@@ -136,18 +145,33 @@
 							var jsonRequest = {
 								'username': commandList[1],
 								'password': commandList[2]
-							}
+							};
 							queryServer('/login', jsonRequest, function(data) { 
 								displayText("You have logged in.");
-								window.localStorage.sessionID = data.sessionID;
+								window.sessionStorage.sessionID = data.sessionID;
 							});
 							break;
 						case "logout":
-							delete window.localStorage.sessionID;
-							displayText("Log out requested... but not implemented");
+							var jsonRequest = {
+								'sessionID': window.sessionStorage.sessionID
+							};
+							queryServer('/logout', jsonRequest, function(data) {
+								delete window.sessionStorage.sessionID;
+								displayText(data.message);
+							});
 							break;
 						case "create":
-							displayText("Create account requested... but not implemented");
+							// create [name] [username] [password] [email]
+							var jsonRequest = {
+								'username': commandList[2],
+								'name': commandList[1],
+								'password': commandList[3],
+								'email': commandList[4]
+							};
+							queryServer('/create_account', jsonRequest, function(data) {
+								window.sessionStorage.sessionID = data.sessionID;
+								displayText("Account created and logged in!");
+							});
 							break;
 						default:
 							displayError();
