@@ -11,7 +11,7 @@ var SETTINGS = {
     'port': '8124',                 // Port to run the HTTP Server on
     'webroot': './web/',            // Location of the static files to serve over HTTP
     'GS_host': '127.0.0.1',         // Game server host
-    'GS_port': '8124',               // Game server port
+    'GS_port': '9000',               // Game server port
     'debug': true
 }
 
@@ -31,7 +31,7 @@ var DOV_API = {
         DoVGameServer.query(DoVGameServer.commands.LOGIN, ctx, response, function(data){
             var jsonResponse = {
                 'status': 'error',
-                'message': 'Invalid Username or Password'
+                'message': 'TODO: Log in has not been implemented fully!'
             }
             return jsonResponse;
         });
@@ -44,7 +44,8 @@ var DOV_API = {
         }
         DoVGameServer.query(DoVGameServer.commands.LOGOUT, ctx, response, function(data) {
             var jsonResponse = {
-                'status': 'TODO: Log Out has not been implemented fully!'
+                'status': 'error',
+                'message': 'TODO: Log Out has not been implemented fully!'
             }
             return jsonResponse;
         });
@@ -60,11 +61,12 @@ var DOV_API = {
         }
         DoVGameServer.query(DoVGameServer.commands.CREATE_ACCOUNT, ctx, response, function(data){
            var jsonResponse = {
-               'status': 'TODO: CreateAccount has not been implemented fully!'
+               'status': 'error',
+               'message': 'TODO: CreateAccount has not been implemented fully!'
            } 
            return jsonResponse;
         });
-    }
+    },
 }
 
 var DoVGameServer = {
@@ -73,7 +75,18 @@ var DoVGameServer = {
         'LOGOUT': 'logout.xml',
         'CREATE_ACCOUNT': 'createAccount.xml'
     },
-    
+    sendJSONResponse: function(response, jsonResponse) {
+        var strResponse = JSON.stringify(jsonResponse);
+           
+        if(SETTINGS.debug) {
+            console.log("JSON Response: ");
+            console.log(strResponse);
+        }
+        response.writeHead(200, {
+            'Content-Type': 'application/json'
+            }, encoding='utf8');
+        response.end(strResponse, encoding='utf8');
+    },
     //
     // Queries the game server database by rendering the proper XML command as specified by "command"
     //   * commands can be found in "DoVGameServer.commands"
@@ -94,8 +107,17 @@ var DoVGameServer = {
                xmlRequest += chunk; 
            });
            output.addListener('end', function () { 
-               var socket = net.createConnection(SETTINGS.GS_port, SETTINGS.GS_host);
-               socket.setEncoding('utf8');
+               socket = net.createConnection(SETTINGS.GS_port, SETTINGS.GS_host); 
+               socket.setEncoding('utf8');   
+               
+               socket.addListener('error', function(ex) {
+                   var jsonResponse = {
+                       'status': 'error',
+                       'message': 'Unable to contact game server'
+                   }
+                   DoVGameServer.sendJSONResponse(response, jsonResponse);   
+               });
+               
                socket.addListener('connect', function() {
                    if(SETTINGS.debug) {
                        console.log("Request: ");
@@ -113,15 +135,10 @@ var DoVGameServer = {
                            }
                            // Process the XML, convert to a JSON object and send back
                            var jsonResponse = processGS_XML(xmlResponse);
-                           var strResponse = JSON.stringify(jsonResponse);
-
-                           response.writeHead(200, {
-                               'Content-Type': 'application/json'
-                           }, encoding='utf8');
-                           response.end(strResponse, encoding='utf8');
+                           DoVGameServer.sendJSONResponse(response, jsonResponse);
                        }
                    });
-               });
+               });  // end socket connect
            });
         });
     }    

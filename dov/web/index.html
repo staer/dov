@@ -5,10 +5,6 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
 		
 		<style type="text/css">
-			html {
-				background: black;
-			}
-
 			body {
 				margin: 0;
 				padding: 0 0 20px;
@@ -20,13 +16,11 @@
 			#navigation span {
 				cursor: pointer;
 			}
-			
 
 			label, input { display:block; font-weight: bold; }
 			input.text { margin-bottom:12px; width:95%; padding: .4em; }
 			fieldset { padding:0; border:0; margin-top:25px; }
 		</style>
-		
 		
 		<link href="http://yui.yahooapis.com/2.8.0r4/build/reset/reset-min.css" type="text/css" rel="Stylesheet" /> 
 		<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/base/jquery-ui.css" type="text/css" rel="Stylesheet" />
@@ -95,7 +89,7 @@
 		<div>
 		<h1>Staer&apos;s DOV Thing-a-ma-jiggy!</h1>
 		<p>
-			All kinds of cool stuff is going to go here!
+			All kinds of cool stuff is going to go here! Like.... <a href="#" onClick="$('#login').dialog();return false;">LOGIN</a>
 		</p>
 		</div>
 		
@@ -121,13 +115,13 @@
 		
 		<div id="login" title="Log In">
 			<form method="post" id="loginForm">
-				<div class="ui-widget" id="loginError" style="display:none;">
-					<div class="ui-state-error ui-corner-all" style="padding: 0.7em .7em; .7em 0.7em height: 20px;"> 
+				<div class="ui-widget" id="loginError">
+					<div class="ui-state-error ui-corner-all" style="padding: 0.7em; height: 20px;"> 
 						<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
 						<strong>Error:</strong> <span id="loginErrorMessage">Error Message Goes Here</span></p>
 					</div>
 				</div>
-				
+
 				<fieldset>
 				<label for="loginUsername">Username:</label>
 				<input type="text" id="loginUsername" class="text ui-widget-content ui-corner-all"></input>
@@ -135,7 +129,7 @@
 				<input type="loginPassword" id="loginPassword" class="text ui-widget-content ui-corner-all"></input>
 				</fieldset>
 			</form>
-			Don't have an account? <a href="#" onclick="$('#login').dialog('close');$('#createAccount').dialog('open');">Create</a> one now!
+			Don't have an account? <a href="#" id="lnkCreateAccount">Create</a> one now!
 		</div>
 		
 		<div id="createAccount" title="Create New Account">
