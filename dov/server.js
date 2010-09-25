@@ -11,7 +11,8 @@ var SETTINGS = {
     'port': '8124',                 // Port to run the HTTP Server on
     'webroot': './web/',            // Location of the static files to serve over HTTP
     'GS_host': '127.0.0.1',         // Game server host
-    'GS_port': '8124'               // Game server port
+    'GS_port': '8124',               // Game server port
+    'debug': true
 }
 
 // All DoV API commands are functions which take a request and response object
@@ -34,7 +35,10 @@ var DOV_API = {
     },
     logout: function(request, response) {
         console.log("Processing 'logout' request...");
-        var ctx = {};
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID
+        };
         DoVGameServer.query(DoVGameServer.commands.LOGOUT, ctx, response, function() {
             var jsonResponse = {
                 "status": "success",
@@ -65,27 +69,37 @@ var DoVGameServer = {
                throw err;
            }
            var xmlRequest = '';
+           var xmlResponse = '';
            output.addListener('data', function (chunk) {
-               xmlRequest += chunk; }
-           );
+               xmlRequest += chunk; 
+           });
            output.addListener('end', function () { 
                var socket = net.createConnection(SETTINGS.GS_port, SETTINGS.GS_host);
                socket.setEncoding('utf8');
                socket.addListener('connect', function() {
+                   if(SETTINGS.debug) {
+                       console.log("Request: ");
+                       console.log(xmlRequest);
+                   }
                    socket.write(xmlRequest);
                    socket.addListener('data', function(data) {
-                       // Read the XML from the server here 
-                   });
-                   socket.addListener('end', function() {
-                       socket.end();
-                       // Process the XML, convert to a JSON object and send back
-                       var jsonResponse = processGS_XML('');
-                       var strResponse = JSON.stringify(jsonResponse);
-                       
-                       response.writeHead(200, {
-                           'Content-Type': 'application/json'
-                       }, encoding='utf8');
-                       response.end(strResponse, encoding='utf8');
+                       xmlResponse += data;
+                       if(xmlResponse.toLowerCase().indexOf("</response>")) {
+                           socket.end();
+                           
+                           if(SETTINGS.debug) {
+                               console.log("Response: ");
+                               console.log(xmlResponse);
+                           }
+                           // Process the XML, convert to a JSON object and send back
+                           var jsonResponse = processGS_XML(xmlResponse);
+                           var strResponse = JSON.stringify(jsonResponse);
+
+                           response.writeHead(200, {
+                               'Content-Type': 'application/json'
+                           }, encoding='utf8');
+                           response.end(strResponse, encoding='utf8');
+                       }
                    });
                });
            });

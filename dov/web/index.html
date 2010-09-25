@@ -31,16 +31,17 @@
 			$(document).ready(function() {
 				$('#loginForm').submit(function() {
 					var jsonRequest = {
-						"username": $("#username")[0].value,
-						"password": $("#password")[0].value
+						"username": $("#loginUsername")[0].value,
+						"password": $("#loginPassword")[0].value
 					};
 					
+					alert(jsonRequest.username + " - " + jsonRequest.password);
 					$.ajax({
 						url: '/login',
 						method: 'GET',
 						data: {
-							"username": $("#username")[0].value,
-							"password": $("#password")[0].value
+							"username": $("#loginUsername")[0].value,
+							"password": $("#loginPassword")[0].value
 						},
 						dataType: 'json',
 						success: function(data, status, request) {
@@ -91,10 +92,10 @@
 		<div id="login" title="Log In">
 			<form method="post" id="loginForm">
 				<fieldset>
-				<label for="username">Username:</label>
-				<input type="text" id="username" class="text ui-widget-content ui-corner-all"></input>
+				<label for="loginUsername">Username:</label>
+				<input type="text" id="loginUsername" class="text ui-widget-content ui-corner-all"></input>
 				<label for="password">Password</label>
-				<input type="password" id="password" class="text ui-widget-content ui-corner-all"></input>
+				<input type="loginPassword" id="loginPassword" class="text ui-widget-content ui-corner-all"></input>
 				</fieldset>
 			</form>
 			Don't have an account? <a href="#" onclick="$('#login').dialog('close');$('#createAccount').dialog('open');">Create</a> one now!
