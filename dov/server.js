@@ -119,6 +119,32 @@ var DOV_API = {
             };
             return jsonResponse;
         });
+    },
+    radar_info: function(request, response) {
+        console.log("Process 'radar info' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID
+        };
+        DoVGameServer.query(DoVGameServer.commands.RADAR_INFO, ctx, response, function(data) {
+           var jsonResponse = {
+               'status': 'error',
+               'message': 'not implemented on node.js!'
+           };
+           return jsonResponse;
+        });
+    },
+    system_info: function(request, response) {
+        console.log("Processing 'system info' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID
+        };
+        DoVGameServer.query(DoVGameServer.commands.SYSTEM_INFO, ctx, response, function(data) {
+            var jsonResponse = data;
+            data.status = "success";
+            return jsonResponse;
+        });
     }
 }
 
@@ -130,7 +156,9 @@ var DoVGameServer = {
         'PLAYER_INFO': 'playerInfo.xml',
         'SHIP_INFO': 'shipInfo.xml',
         'SECTOR_INFO': 'sectorInfo.xml',
-        'MOVE_SHIP': 'moveShip.xml'
+        'MOVE_SHIP': 'moveShip.xml',
+        'RADAR_INFO': 'radarInfo.xml',
+        'SYSTEM_INFO': 'systemInfo.xml'
     },
     sendJSONResponse: function(response, jsonResponse) {
         var strResponse = JSON.stringify(jsonResponse);
@@ -241,6 +269,8 @@ var URLCONF = {
     '/ship_info': DOV_API.ship_info,
     '/sector_info': DOV_API.sector_info,
     '/move_ship': DOV_API.move_ship,
+    '/radar': DOV_API.radar_info,
+    '/system': DOV_API.system_info
 }
 
 

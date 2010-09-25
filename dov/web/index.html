@@ -196,33 +196,57 @@
 							queryServer('/player_info', jsonRequest, function(data) {
 								displayText("Pilot: " + data.player.name);
 								displayText("Credits: " + data.player.credits);
-								displayText("Turns: " + data.player.turns);					
-							});
-							
-							// Ship summary
-							//queryServer('/ship_info', jsonRequest, function(data) {
-							//	displayText(data.message);
-							//});
-							
-							// Give a sector summary
-							var jsonRequest = {
-								'sessionID': window.sessionStorage.sessionID
-							};
-							queryServer('/sector_info', jsonRequest, function(data) {
-								displayText("** Sector (" + data.sector.x + ", " + data.sector.y + ") Summary **");
-								displayText("Ships: " + data.sector.shipCount);
-								displayText("Solar Bodies: " + data.sector.solarBodyCount);
+								displayText("Turns: " + data.player.turns);
+								
 							});
 							break;
-						case "sector":
+							
+						case "radar":
 							var jsonRequest = {
 								'sessionID': window.sessionStorage.sessionID
 							};
-							queryServer('/sector_info', jsonRequest, function(data) {
-								displayText("** Sector (" + data.sector.x + ", " + data.sector.y + ") Summary **");
-								displayText("Ships: " + data.sector.shipCount);
-								displayText("Solar Bodies: " + data.sector.solarBodyCount);
+							queryServer('/radar', jsonRequest, function(data) {
+								displayText(data.message);
 							});
+							break;
+							
+						case "sector":
+							var system_name = '';
+							var sectorX = '';
+							var sectorY = '';
+							var shipCount = 0;
+							var solarBodyCount = 0;
+							
+							// Now get the system info to display
+							var jsonRequest = {
+								'sessionID': window.sessionStorage.sessionID
+							};
+							queryServer('/system', jsonRequest, function(data) {
+								// Store the data we need
+								system_name = data.system.name;
+							
+								var jsonRequest = {
+									'sessionID': window.sessionStorage.sessionID
+								};
+								queryServer('/sector_info', jsonRequest, function(data) {
+									// Store the data we need
+									sectorX = data.sector.x;
+									sectorY = data.sector.y;
+									shipCount = data.sector.shipCount;
+									solarBodyCount = data.sector.solarBodyCount;
+									
+									// Render the stuff we care about!
+									displayText("System " + system_name + " - Sector " + sectorX + ":" + sectorY + "");
+									displayText(shipCount + " additional ships detected.");
+									displayText(solarBodyCount + " solar bodies detected.");
+									displayText("Radar Detects: ");
+									displayText("&nbsp;&nbsp;&nbsp;&nbsp;North: blah blah blah");
+									displayText("&nbsp;&nbsp;&nbsp;&nbsp;North East: blah blah blah");
+									displayText("&nbsp;&nbsp;&nbsp;&nbsp;South East: blah blah blah");
+									displayText("&nbsp;&nbsp;&nbsp;&nbsp;South: blah blah blah");
+									
+								}); // end query sector
+							}); // end query system
 							break;
 						case "move":
 							var direction = 0;
@@ -258,9 +282,45 @@
 									"direction": direction
 								};
 								queryServer('/move_ship', jsonRequest, function(data) {
-									displayText(data.message);
-								});	
-							}
+									
+									var system_name = '';
+									var sectorX = '';
+									var sectorY = '';
+									var shipCount = 0;
+									var solarBodyCount = 0;
+									
+									// Now get the system info to display
+									var jsonRequest = {
+										'sessionID': window.sessionStorage.sessionID
+									};
+									queryServer('/system', jsonRequest, function(data) {
+										// Store the data we need
+										system_name = data.system.name;
+									
+										var jsonRequest = {
+											'sessionID': window.sessionStorage.sessionID
+										};
+										queryServer('/sector_info', jsonRequest, function(data) {
+											// Store the data we need
+											sectorX = data.sector.x;
+											sectorY = data.sector.y;
+											shipCount = data.sector.shipCount;
+											solarBodyCount = data.sector.solarBodyCount;
+											
+											// Render the stuff we care about!
+											displayText("Now in system " + system_name + " - Sector " + sectorX + ":" + sectorY + "");
+											displayText(shipCount + " additional ships detected.");
+											displayText(solarBodyCount + " solar bodies detected.");
+											displayText("Radar Detects: ");
+											displayText("&nbsp;&nbsp;&nbsp;&nbsp;North: blah blah blah");
+											displayText("&nbsp;&nbsp;&nbsp;&nbsp;North East: blah blah blah");
+											displayText("&nbsp;&nbsp;&nbsp;&nbsp;South East: blah blah blah");
+											displayText("&nbsp;&nbsp;&nbsp;&nbsp;South: blah blah blah");
+											
+										}); // end query sector
+									}); // end query system
+								});	// end query move
+							} // end if valid direction
 						
 							break;
 						default:
