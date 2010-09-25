@@ -65,13 +65,72 @@ var DOV_API = {
            return jsonResponse;
         });
     },
+    player_info: function(request, response) {
+        console.log("Processing 'player info' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID
+        };
+        DoVGameServer.query(DoVGameServer.commands.PLAYER_INFO, ctx, response, function(data){
+            //{"status":100,"player":{"name":"staer","emailAddress":"dih0658@gmail.com","username":"staer","credits":10000,"turns":997,"shipCount":1}}
+            var jsonResponse = data;
+            jsonResponse.status = "success";
+            return jsonResponse;
+        });
+    },
+    ship_info: function(request, response) {
+        console.log("Processing 'ship info' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID,
+            "shipIndex": 0
+        };
+        DoVGameServer.query(DoVGameServer.commands.SHIP_INFO, ctx, response, function(data) {
+            var jsonResponse = {
+                'status': 'error',
+                'message': 'Not implemented on node.js yet!'
+            };
+            return jsonResponse;
+        });
+    },
+    sector_info: function(request, response) {
+        console.log("Processing 'sector info' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID
+        };
+        DoVGameServer.query(DoVGameServer.commands.SECTOR_INFO, ctx, response, function(data) {
+            var jsonResponse = data;
+            jsonResponse.status = "success";
+            return jsonResponse;
+        });
+    },
+    move_ship: function(request, response) {
+        console.log("Processing 'move ship' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "sessionID": urlData.sessionID,
+            "direction": urlData.direction
+        };
+        DoVGameServer.query(DoVGameServer.commands.MOVE_SHIP, ctx, response, function(data) {
+            var jsonResponse = {
+                'status': 'success',
+                'message': 'Move complete'
+            };
+            return jsonResponse;
+        });
+    }
 }
 
 var DoVGameServer = {
     commands: {
         'LOGIN': 'login.xml',
         'LOGOUT': 'logout.xml',
-        'CREATE_ACCOUNT': 'createAccount.xml'
+        'CREATE_ACCOUNT': 'createAccount.xml',
+        'PLAYER_INFO': 'playerInfo.xml',
+        'SHIP_INFO': 'shipInfo.xml',
+        'SECTOR_INFO': 'sectorInfo.xml',
+        'MOVE_SHIP': 'moveShip.xml'
     },
     sendJSONResponse: function(response, jsonResponse) {
         var strResponse = JSON.stringify(jsonResponse);
@@ -177,7 +236,11 @@ var DoVGameServer = {
 var URLCONF = {
     '/login': DOV_API.login,
     '/logout': DOV_API.logout,
-    '/create_account': DOV_API.create_account
+    '/create_account': DOV_API.create_account,
+    '/player_info': DOV_API.player_info,
+    '/ship_info': DOV_API.ship_info,
+    '/sector_info': DOV_API.sector_info,
+    '/move_ship': DOV_API.move_ship,
 }
 
 

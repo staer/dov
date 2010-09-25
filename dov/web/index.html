@@ -40,6 +40,21 @@
 					'usage': 'session',
 					'help_text': 'Displays the current session ID',
 					'required_parameters': 0
+				},
+				'status': {
+					'usage': 'status',
+					'help_text': 'Displays the current player status (turns, credit, etc.)',
+					'required_parameters': 0
+				},
+				'sector': {
+					'usage': 'sector',
+					'help_text': 'Displays information about the current sector',
+					'required_parameters': 0
+				},
+				'move': {
+					'usage': 'move [direction]',
+					'help_text': 'Move the player in one of the six available directions (n, ne, se, s, sw, nw)',
+					'required_parameters': 1
 				}
 			};
 		
@@ -116,7 +131,7 @@
 					}
 					
 					// Check to see if they have the correct number of args for the command they wanted
-					if(commands[commandList[0]]['required_parameters']+1>commandList.length) {
+					if(commands[commandList[0]] && commands[commandList[0]]['required_parameters']+1>commandList.length) {
 						displayText("Invalid usage of '" + commandList[0] + "' command. Please use 'help " + commandList[0] + "' for more details.");
 						$("#command")[0].value = "";
 						return;
@@ -172,6 +187,81 @@
 								window.sessionStorage.sessionID = data.sessionID;
 								displayText("Account created and logged in!");
 							});
+							break;
+						case "status":
+							// Player summary
+							var jsonRequest = {
+								"sessionID": window.sessionStorage.sessionID
+							};
+							queryServer('/player_info', jsonRequest, function(data) {
+								displayText("Pilot: " + data.player.name);
+								displayText("Credits: " + data.player.credits);
+								displayText("Turns: " + data.player.turns);					
+							});
+							
+							// Ship summary
+							//queryServer('/ship_info', jsonRequest, function(data) {
+							//	displayText(data.message);
+							//});
+							
+							// Give a sector summary
+							var jsonRequest = {
+								'sessionID': window.sessionStorage.sessionID
+							};
+							queryServer('/sector_info', jsonRequest, function(data) {
+								displayText("** Sector (" + data.sector.x + ", " + data.sector.y + ") Summary **");
+								displayText("Ships: " + data.sector.shipCount);
+								displayText("Solar Bodies: " + data.sector.solarBodyCount);
+							});
+							break;
+						case "sector":
+							var jsonRequest = {
+								'sessionID': window.sessionStorage.sessionID
+							};
+							queryServer('/sector_info', jsonRequest, function(data) {
+								displayText("** Sector (" + data.sector.x + ", " + data.sector.y + ") Summary **");
+								displayText("Ships: " + data.sector.shipCount);
+								displayText("Solar Bodies: " + data.sector.solarBodyCount);
+							});
+							break;
+						case "move":
+							var direction = 0;
+							switch(commandList[1]) {
+								case 'n':
+									direction = 0;
+									break;
+								case 'ne':
+									direction = 1;
+									break;
+								case 'se':
+									direction = 2;
+									break;
+								case 's':
+									direction = 3;
+									break;
+								case 'sw':
+									direction = 4;
+									break;
+								case 'nw': 
+									direction = 5;
+									break;
+								default:
+									direction = -1;
+									break;
+							}
+							
+							if(direction==-1) {
+								displayText("Invalid direction, please use 'help move' for more information.");
+							} else {
+								var jsonRequest = {
+									"sessionID": window.sessionStorage.sessionID,
+									"direction": direction
+								};
+								queryServer('/move_ship', jsonRequest, function(data) {
+									displayText(data.message);
+								});	
+							}
+						
 							break;
 						default:
 							displayError();
