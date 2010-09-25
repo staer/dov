@@ -102,7 +102,7 @@ var DoVGameServer = {
                throw err;
            }
            var xmlRequest = '';
-           var xmlResponse = '';
+           var serverResponse = '';
            output.addListener('data', function (chunk) {
                xmlRequest += chunk; 
            });
@@ -125,16 +125,18 @@ var DoVGameServer = {
                    }
                    socket.write(xmlRequest);
                    socket.addListener('data', function(data) {
-                       xmlResponse += data;
-                       if(xmlResponse.toLowerCase().indexOf("</response>")) {
+                       serverResponse += data;
+                       
+                       // TODO: For JSON we need a way to detect end of stream (newline at the moment)...
+                       if(xmlResponse.toLowerCase().indexOf("\n")) {
                            socket.end();
                            
                            if(SETTINGS.debug) {
                                console.log("Response: ");
-                               console.log(xmlResponse);
+                               console.log(serverResponse);
                            }
                            // Process the XML, convert to a JSON object and send back
-                           var jsonResponse = processGS_XML(xmlResponse);
+                           var jsonResponse = processGS_XML(serverResponse);
                            DoVGameServer.sendJSONResponse(response, jsonResponse);
                        }
                    });
