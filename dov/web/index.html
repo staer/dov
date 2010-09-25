@@ -9,23 +9,64 @@
 		<script src="http://cdn.socket.io/stable/socket.io.js"></script>
 		
 		<script type="text/javascript">
+		
+			var commands = {
+				'login': {
+					'usage': 'login [username] [password]',
+					'help_text': 'This command will attempt to log a user into the DoV game.',
+					'required_parameters': 2
+				},
+				'logout': {
+					'usage': 'logout',
+					'help_text': 'This command will terminate the current connection to the DoV game.',
+					'required_parameters': 0
+				},
+				'create': {
+					'usage': 'create [name] [username] [password] [email]',
+					'help_text': 'This command will create a new DoV account',
+					'required_parameters': 4
+				},
+				'help': {
+					'usage': 'help',
+					'help_text': 'Get help regarding the available commands',
+					'required_parameters': 0
+				},
+				'clear': {
+					'usage': 'clear',
+					'help_text': 'Clears the screen back of all output from the game server',
+					'required_parameters': 0
+				},
+				'session': {
+					'usage': 'session',
+					'help_text': 'Displays the current session ID',
+					'required_parameters': 0
+				}
+			};
+		
 			var displayError = function() {
-				$('#results').append("<li>>>> Unknown Command - type 'help' to see a list of commands and their descriptions</li>");	
+				$('#results').append("<li>Unknown Command - type 'help' to see a list of commands and their descriptions</li>");	
 			}
 			
 			var usageError = function() {
-				$('#results').append("<li>>>> Invalid Usage - type 'help' to see a list of commands and their descriptions</li>");
+				$('#results').append("<li>Invalid Usage - type 'help' to see a list of commands and their descriptions</li>");
 			}
 			
 			var displayText = function(text) {
-				$('#results').append("<li>>>> " + text);
+				$('#results').append("<li>" + text + "</li>");
 			}
 		
-			var displayHelp = function() {
-				displayText("Available Commands: ");
-				displayText("login [username] [password] :: Logs in a user");
-				displayText("logout :: Logs out the currently logged in user");
-				displayText("create_account [name] [username] [password] [email] :: Registers a new account");
+			var displayHelp = function(command) {
+				if(command) {
+					displayText("Usage: " + commands[command]['usage']);
+					displayText("Description: " + commands[command]['help_text']);
+				} else {
+					displayText("Available Commands:");
+					for(var cmd in commands) {
+						displayText("&nbsp;&nbsp;&nbsp;&nbsp;* " + cmd);
+					}
+					displayText("Type 'help [command]' for additional information about a specific command.");
+				}
+
 			}
 			
 			var clear = function() {
@@ -58,11 +99,18 @@
 					var commandList = command.split(' ');
 					
 					if(!window.localStorage.sessionID) {
-						if(commandList[0]!=="help" && commandList[0]!=="login" && commandList[0]!=="clear") {
+						if(commandList[0]!=="help" && commandList[0]!=="login" && commandList[0]!=="clear" && commandList[0]!=="create") {
 							displayText("You must be logged in before you can issue most commands. See 'help' for more information");
 							$("#command")[0].value = "";
 							return;
 						}
+					}
+					
+					// Check to see if they have the correct number of args for the command they wanted
+					if(commands[commandList[0]]['required_parameters']+1>commandList.length) {
+						displayText("Invalid usage of '" + commandList[0] + "' command. Please use 'help " + commandList[0] + "' for more details.");
+						$("#command")[0].value = "";
+						return;
 					}
 					
 					switch(commandList[0]) {
@@ -70,7 +118,12 @@
 							clear();
 							break;
 						case "help":
-							displayHelp();
+							if(commandList.length == 2) {
+								displayHelp(commandList[1]);
+							} else {
+								displayHelp();
+							}
+							
 							break;
 						case "session":
 							if(window.localStorage.sessionID) {
@@ -80,33 +133,21 @@
 							}
 							break;
 						case "login":
-							if(commandList.length !==3) {
-								usageError();
-							} else {
-								var jsonRequest = {
-									'username': commandList[1],
-									'password': commandList[2]
-								}
-								queryServer('/login', jsonRequest, function(data) { 
-									displayText("You have logged in.");
-									window.localStorage.sessionID = data.sessionID;
-								});
-							} // end else
+							var jsonRequest = {
+								'username': commandList[1],
+								'password': commandList[2]
+							}
+							queryServer('/login', jsonRequest, function(data) { 
+								displayText("You have logged in.");
+								window.localStorage.sessionID = data.sessionID;
+							});
 							break;
 						case "logout":
-							if(commandList.length!==1) {
-								usageError();
-							} else {
-								delete window.localStorage.sessionID;
-								displayText("Log out requested... but not implemented");
-							}
+							delete window.localStorage.sessionID;
+							displayText("Log out requested... but not implemented");
 							break;
-						case "create_account":
-							if(commandList.length!=5) {
-								usageError();
-							} else {
-								displayText("Create account requested... but not implemented");
-							}
+						case "create":
+							displayText("Create account requested... but not implemented");
 							break;
 						default:
 							displayError();
@@ -120,11 +161,12 @@
 		
 		
 	</head>
-	<body>
+	<body style="font-size: 14px; font-family: Verdana;">
 	<div id="container" style="width:90%; height: 90%; margin-left: auto; margin-right: auto;">
+		<h3>Welcome to the DoV console! Type 'help' to see a list of available commands, 
+			or 'help [command]' for information about a specific command.</h3>
 		<div id="border" class="ui-widget-content ui-corner-all" style="width:100%; height: 600px; overflow: auto;">
 		<ul id="results">
-			<li>>>> Type 'help' to get help... *duh*</li>
 		</ul>
 		</div>
 		<div>
