@@ -1,154 +1,138 @@
 <html>
 	<head>
-		<title>Staer&apos;s DOV Client</title>
+		<title>DOV Console</title>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/jquery-ui.min.js"></script>
-		
-		<style type="text/css">
-			body {
-				margin: 0;
-				padding: 0 0 20px;
-				min-height: 100%;
-				font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-				font-size: 10px;
-			}
-			
-			#navigation span {
-				cursor: pointer;
-			}
-
-			label, input { display:block; font-weight: bold; }
-			input.text { margin-bottom:12px; width:95%; padding: .4em; }
-			fieldset { padding:0; border:0; margin-top:25px; }
-		</style>
-		
 		<link href="http://yui.yahooapis.com/2.8.0r4/build/reset/reset-min.css" type="text/css" rel="Stylesheet" /> 
 		<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/base/jquery-ui.css" type="text/css" rel="Stylesheet" />
 		
+		<script src="http://cdn.socket.io/stable/socket.io.js"></script>
 		
 		<script type="text/javascript">
-			$(document).ready(function() {
-				$('#loginForm').submit(function() {
-					$.ajax({
-						url: '/login',
-						method: 'GET',
-						data: {
-							"username": $("#loginUsername")[0].value,
-							"password": $("#loginPassword")[0].value
-						},
-						dataType: 'json',
-						success: function(data, status, request) {
-							if(data.status==="error") {
-								$('#loginErrorMessage').innerHtml = data.message;
-								$('#loginError').show();
-							} else if (data.status==="success") {
-								alert("logged in!");
-								$('#login').dialog('close');
+			var displayError = function() {
+				$('#results').append("<li>>>> Unknown Command - type 'help' to see a list of commands and their descriptions</li>");	
+			}
+			
+			var usageError = function() {
+				$('#results').append("<li>>>> Invalid Usage - type 'help' to see a list of commands and their descriptions</li>");
+			}
+			
+			var displayText = function(text) {
+				$('#results').append("<li>>>> " + text);
+			}
+		
+			var displayHelp = function() {
+				displayText("Available Commands: ");
+				displayText("login [username] [password] :: Logs in a user");
+				displayText("logout :: Logs out the currently logged in user");
+				displayText("create_account [name] [username] [password] [email] :: Registers a new account");
+			}
+			
+			var clear = function() {
+				$("#results li").remove();
+			}
+			var queryServer = function(requestURL, jsonRequest, callback) {
+				$.ajax({
+					url: requestURL,
+					method: 'GET',
+					data: jsonRequest,
+					dataType: 'json',
+					success: function(data, status, request) {
+						if(data.status==="error") {
+							displayText(data.message);
+						} else if (data.status==="success") {
+							callback(data);
+						}
+					},
+					failure: function(data) {
+						// Show some kind of login failure here...
+						displayText("ERROR: Transport level failure!");
+					}
+				}); // end ajax
+			}
+		
+			$(document).ready(function(){
+				$('#btnSubmit').bind('click', function() {
+					// yay for super basic parsing!
+					var command = $('#command')[0].value;
+					var commandList = command.split(' ');
+					
+					if(!window.localStorage.sessionID) {
+						if(commandList[0]!=="help" && commandList[0]!=="login" && commandList[0]!=="clear") {
+							displayText("You must be logged in before you can issue most commands. See 'help' for more information");
+							$("#command")[0].value = "";
+							return;
+						}
+					}
+					
+					switch(commandList[0]) {
+						case "clear":
+							clear();
+							break;
+						case "help":
+							displayHelp();
+							break;
+						case "session":
+							if(window.localStorage.sessionID) {
+								displayText("SessionID: " + window.localStorage.sessionID);
+							} else {
+								displayText("You are not logged in.");
 							}
-						},
-						failure: function(data) {
-							// Show some kind of login failure here...
-						}
-					});
-					return false;
-				});
-				
-				$("#createAccount").dialog({
-					autoOpen: false,
-					show: "fade",
-					hide: "blind",
-					buttons: {
-						'Create Account': function() {
-							alert('TODO: Not Implemented');
-						}
-					}
-				});
-				
-				$("#login").dialog({
-					resizable: false,
-					position: 'middle',
-					show: "fade",
-					hide: "blind",
-					buttons: {
-						"Log In": function() {
-							$("#loginForm").submit();
-						}
-					}
-				});
-				
-				$('#navigation span').hover(
-					function() { $(this).addClass('ui-state-hover'); }, 
-					function() { $(this).removeClass('ui-state-hover'); }
-				);
-			});
+							break;
+						case "login":
+							if(commandList.length !==3) {
+								usageError();
+							} else {
+								var jsonRequest = {
+									'username': commandList[1],
+									'password': commandList[2]
+								}
+								queryServer('/login', jsonRequest, function(data) { 
+									displayText("You have logged in.");
+									window.localStorage.sessionID = data.sessionID;
+								});
+							} // end else
+							break;
+						case "logout":
+							if(commandList.length!==1) {
+								usageError();
+							} else {
+								delete window.localStorage.sessionID;
+								displayText("Log out requested... but not implemented");
+							}
+							break;
+						case "create_account":
+							if(commandList.length!=5) {
+								usageError();
+							} else {
+								displayText("Create account requested... but not implemented");
+							}
+							break;
+						default:
+							displayError();
+							break;
+					};
+					
+					$("#command")[0].value = "";
+				}); // end submit-click
+			}); // end document-ready
 		</script>
+		
+		
 	</head>
 	<body>
-		<div class="container">
-		
+	<div id="container" style="width:90%; height: 90%; margin-left: auto; margin-right: auto;">
+		<div id="border" class="ui-widget-content ui-corner-all" style="width:100%; height: 600px; overflow: auto;">
+		<ul id="results">
+			<li>>>> Type 'help' to get help... *duh*</li>
+		</ul>
+		</div>
 		<div>
-		<h1>Staer&apos;s DOV Thing-a-ma-jiggy!</h1>
-		<p>
-			All kinds of cool stuff is going to go here! Like.... <a href="#" onClick="$('#login').dialog();return false;">LOGIN</a>
-		</p>
+			<input type="text" id="command" class="text ui-widget-content ui-corner-all" style="width: 90%; height: 25px;"></input>
+			<button id="btnSubmit" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false">
+				<span class="ui-button-text">Submit</span>
+			</button>
 		</div>
-		
-		<div id="navigation">
-		<table class="ui-widget">
-			<tr>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-nw"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-n"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-ne"></span></td>
-			</tr>
-			<tr>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-w"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-arrow-4-diag"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-e"></span></td>
-			</tr>
-			<tr>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-sw"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-s"></span></td>
-				<td><span class="ui-widget-content ui-corner-all ui-icon ui-icon-triangle-1-se"></span></td>
-			</tr>
-		</table>
-		</div>
-		
-		<div id="login" title="Log In">
-			<form method="post" id="loginForm">
-				<div class="ui-widget" id="loginError">
-					<div class="ui-state-error ui-corner-all" style="padding: 0.7em; height: 20px;"> 
-						<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span> 
-						<strong>Error:</strong> <span id="loginErrorMessage">Error Message Goes Here</span></p>
-					</div>
-				</div>
-
-				<fieldset>
-				<label for="loginUsername">Username:</label>
-				<input type="text" id="loginUsername" class="text ui-widget-content ui-corner-all"></input>
-				<label for="password">Password</label>
-				<input type="loginPassword" id="loginPassword" class="text ui-widget-content ui-corner-all"></input>
-				</fieldset>
-			</form>
-			Don't have an account? <a href="#" id="lnkCreateAccount">Create</a> one now!
-		</div>
-		
-		<div id="createAccount" title="Create New Account">
-			<form method="post" id="registerForm">
-				<fieldset>
-					<label for="username">Username: </label>
-					<input type="text" id="username" class="text ui-widget-content ui-corner-all"></input>
-					<label for="password">Password: </label>
-					<input type="password" id="password" class="text ui-widget-content ui-corner-all"></input>
-					<label for="password2">Re-enter Password: </label>
-					<input type="password" id="password2" class="text ui-widget-content ui-corner-all"></input>
-					<label for="pilotName">Pilot Name: </label>
-					<input type="text" id="pilotName" class="text ui-widget-content ui-corner-all"></input>
-					<label for="email">Email Address: </label>
-					<input type="text" id="email" class="text ui-widget-content ui-corner-all"></input>
-				</fieldset>
-			</form>
-		</div>
-		
-		</div>
+	</div>
 	</body>
 </html>

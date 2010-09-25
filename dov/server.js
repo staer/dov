@@ -10,8 +10,8 @@ Mu.templateRoot = './templates';
 var SETTINGS = {
     'port': '8124',                 // Port to run the HTTP Server on
     'webroot': './web/',            // Location of the static files to serve over HTTP
-    'GS_host': '127.0.0.1',         // Game server host
-    'GS_port': '9000',               // Game server port
+    'GS_host': 'DOV',       // Game server host
+    'GS_port': '31415',               // Game server port
     'debug': true
 }
 
@@ -29,10 +29,9 @@ var DOV_API = {
         }
         
         DoVGameServer.query(DoVGameServer.commands.LOGIN, ctx, response, function(data){
-            var jsonResponse = {
-                'status': 'error',
-                'message': 'TODO: Log in has not been implemented fully!'
-            }
+            var jsonResponse = {};
+            jsonResponse.status = "success";
+            jsonResponse.sessionID = data.sessionID;
             return jsonResponse;
         });
     },
@@ -87,6 +86,30 @@ var DoVGameServer = {
             }, encoding='utf8');
         response.end(strResponse, encoding='utf8');
     },
+    
+    processErrors: function(data) {
+        var jsonResponse = {};
+        
+        if(data.status===200) {
+            jsonResponse.status = "error";
+            jsonResponse.message = "ERROR: " + data.errorMessage;
+            
+            return jsonResponse;
+        } else if(data.status===300) {
+            jsonResponse.status = "error";
+            jsonResponse.message = "ERROR: Invalid request format";
+            
+            return jsonResponse;
+        } else if(data.status===400) {
+            jsonResponse.status = "error";
+            jsonResponse.message = "ERROR: An unknown error occurred";
+            
+            return jsonResponse;
+        } else {
+            return false;
+        }
+        
+    },
     //
     // Queries the game server database by rendering the proper XML command as specified by "command"
     //   * commands can be found in "DoVGameServer.commands"
@@ -128,7 +151,8 @@ var DoVGameServer = {
                        serverResponse += data;
                        
                        // TODO: For JSON we need a way to detect end of stream (newline at the moment)...
-                       if(xmlResponse.toLowerCase().indexOf("\n")) {
+                       if(serverResponse.toLowerCase().indexOf("\n")) {
+                           //serverResponse = serverResponse.substring(0, serverResponse.length-1);
                            socket.end();
                            
                            if(SETTINGS.debug) {
@@ -136,7 +160,12 @@ var DoVGameServer = {
                                console.log(serverResponse);
                            }
                            // Process the XML, convert to a JSON object and send back
-                           var jsonResponse = processGS_XML(serverResponse);
+                           var serverObj = JSON.parse(serverResponse);
+                           
+                           var jsonResponse = DoVGameServer.processErrors(serverObj);
+                           if(jsonResponse===false) {
+                               jsonResponse = processGS_XML(serverObj);
+                           }
                            DoVGameServer.sendJSONResponse(response, jsonResponse);
                        }
                    });
@@ -177,12 +206,13 @@ var static_serve = function(request, response) {
 }
 
 // Create our simple HTTP server
-http.createServer(function (request, response) {
+var server = http.createServer(function (request, response) {
     
     // Get the handler function from the URLCONF or default to the static_serve method if it isn't found
     var handler = URLCONF[url.parse(request.url).pathname] || static_serve;
     handler(request, response);
     
 }).listen(SETTINGS.port);
+
 
 console.log('Server running at http://127.0.0.1:' + SETTINGS.port);

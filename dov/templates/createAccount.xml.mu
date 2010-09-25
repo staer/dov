@@ -1,5 +1,5 @@
 <Request>
-	<Format>JSON</Format>
+	<Format>json</Format>
 	<Name>{{ name }}</Name>
 	<EmailAddress>{{ email }}</EmailAddress>
 	<Username>{{ username }}</Username>
