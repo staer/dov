@@ -16,6 +16,9 @@ var SETTINGS = {
 }
 
 // All DoV API commands are functions which take a request and response object
+
+// TODO - The parsing of args and creation of context should be in a function which can handle
+// errors, validate the input?
 var DOV_API = {
     login: function(request, response) {
         console.log("Processing 'login' request...");
@@ -25,10 +28,10 @@ var DOV_API = {
             "password": urlData.password
         }
         
-        DoVGameServer.query(DoVGameServer.commands.LOGIN, ctx, response, function(){
+        DoVGameServer.query(DoVGameServer.commands.LOGIN, ctx, response, function(data){
             var jsonResponse = {
-                "status": "success",
-                "sessionID": "Session_ID_Goes_Here"
+                'status': 'error',
+                'message': 'Invalid Username or Password'
             }
             return jsonResponse;
         });
@@ -38,12 +41,28 @@ var DOV_API = {
         var urlData = qs.parse(url.parse(request.url).query);
         var ctx = {
             "sessionID": urlData.sessionID
-        };
-        DoVGameServer.query(DoVGameServer.commands.LOGOUT, ctx, response, function() {
+        }
+        DoVGameServer.query(DoVGameServer.commands.LOGOUT, ctx, response, function(data) {
             var jsonResponse = {
-                "status": "success",
+                'status': 'TODO: Log Out has not been implemented fully!'
             }
             return jsonResponse;
+        });
+    },
+    create_account: function(request, response) {
+        console.log("Processing 'create account' request...");
+        var urlData = qs.parse(url.parse(request.url).query);
+        var ctx = {
+            "name": urlData.name,
+            "username": urlData.username,
+            "password": urlData.password,
+            "email": urlData.email
+        }
+        DoVGameServer.query(DoVGameServer.commands.CREATE_ACCOUNT, ctx, response, function(data){
+           var jsonResponse = {
+               'status': 'TODO: CreateAccount has not been implemented fully!'
+           } 
+           return jsonResponse;
         });
     }
 }
@@ -52,6 +71,7 @@ var DoVGameServer = {
     commands: {
         'LOGIN': 'login.xml',
         'LOGOUT': 'logout.xml',
+        'CREATE_ACCOUNT': 'createAccount.xml'
     },
     
     //
@@ -110,7 +130,8 @@ var DoVGameServer = {
 // URLCONF maps urls to handler functions - this is very simple right now. No regular expressions or anything fancy like that
 var URLCONF = {
     '/login': DOV_API.login,
-    '/logout': DOV_API.logout
+    '/logout': DOV_API.logout,
+    '/create_account': DOV_API.create_account
 }
 
 
