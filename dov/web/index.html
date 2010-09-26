@@ -60,15 +60,15 @@
 		
 			var displayError = function() {
 				$('#results').append("<li>Unknown Command - type 'help' to see a list of commands and their descriptions</li>");	
-			}
+			};
 			
 			var usageError = function() {
 				$('#results').append("<li>Invalid Usage - type 'help' to see a list of commands and their descriptions</li>");
-			}
+			};
 			
 			var displayText = function(text) {
 				$('#results').append("<li>" + text + "</li>");
-			}
+			};
 		
 			var displayHelp = function(command) {
 				if(command) {
@@ -82,11 +82,11 @@
 					displayText("Type 'help [command]' for additional information about a specific command.");
 				}
 
-			}
+			};
 			
 			var clear = function() {
 				$("#results li").remove();
-			}
+			};
 			var queryServer = function(requestURL, jsonRequest, callback) {
 				$.ajax({
 					url: requestURL,
@@ -105,7 +105,7 @@
 						displayText("ERROR: Transport level failure!");
 					}
 				}); // end ajax
-			}
+			};
 		
 			$(document).ready(function(){
 				$('#command').bind('keypress', function(event) {
@@ -137,6 +137,7 @@
 						return;
 					}
 					
+					var jsonRequest = '';
 					switch(commandList[0]) {
 						case "clear":
 							clear();
@@ -157,7 +158,7 @@
 							}
 							break;
 						case "login":
-							var jsonRequest = {
+							jsonRequest = {
 								'username': commandList[1],
 								'password': commandList[2]
 							};
@@ -167,7 +168,7 @@
 							});
 							break;
 						case "logout":
-							var jsonRequest = {
+							jsonRequest = {
 								'sessionID': window.sessionStorage.sessionID
 							};
 							queryServer('/logout', jsonRequest, function(data) {
@@ -177,7 +178,7 @@
 							break;
 						case "create":
 							// create [name] [username] [password] [email]
-							var jsonRequest = {
+							jsonRequest = {
 								'username': commandList[2],
 								'name': commandList[1],
 								'password': commandList[3],
@@ -190,7 +191,7 @@
 							break;
 						case "status":
 							// Player summary
-							var jsonRequest = {
+							jsonRequest = {
 								"sessionID": window.sessionStorage.sessionID
 							};
 							queryServer('/player_info', jsonRequest, function(data) {
@@ -202,7 +203,7 @@
 							break;
 							
 						case "radar":
-							var jsonRequest = {
+							jsonRequest = {
 								'sessionID': window.sessionStorage.sessionID
 							};
 							queryServer('/radar', jsonRequest, function(data) {
@@ -218,14 +219,14 @@
 							var solarBodyCount = 0;
 							
 							// Now get the system info to display
-							var jsonRequest = {
+							jsonRequest = {
 								'sessionID': window.sessionStorage.sessionID
 							};
 							queryServer('/system', jsonRequest, function(data) {
 								// Store the data we need
 								system_name = data.system.name;
 							
-								var jsonRequest = {
+								jsonRequest = {
 									'sessionID': window.sessionStorage.sessionID
 								};
 								queryServer('/sector_info', jsonRequest, function(data) {
@@ -277,7 +278,7 @@
 							if(direction==-1) {
 								displayText("Invalid direction, please use 'help move' for more information.");
 							} else {
-								var jsonRequest = {
+								jsonRequest = {
 									"sessionID": window.sessionStorage.sessionID,
 									"direction": direction
 								};
@@ -290,7 +291,7 @@
 									var solarBodyCount = 0;
 									
 									// Now get the system info to display
-									var jsonRequest = {
+									jsonRequest = {
 										'sessionID': window.sessionStorage.sessionID
 									};
 									queryServer('/system', jsonRequest, function(data) {
